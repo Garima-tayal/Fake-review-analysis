@@ -1,8 +1,13 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import base64
 from database import create_tables, save_user, save_review, get_all_reviews
 
+def get_base64_image(image_file):
+    with open(image_file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+    
 # Initialize DB
 create_tables()
 
@@ -15,39 +20,64 @@ if "page" not in st.session_state:
     st.session_state.page = "login"
 
 # UI
-st.set_page_config(page_title="Fake Review Detector", page_icon="🔍")
+st.set_page_config(page_title="Fake Review Detector")
 
-st.markdown("""
+img = get_base64_image("photo.jpg")
+
+st.markdown(f"""
 <style>
-.stApp { background-color: #f0e6f2; }
-.title {
+.stApp {{
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                      url("data:image/jpg;base64,{img}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}}
+
+/* Titles */
+.title {{
     text-align: center;
     font-size: 40px;
     font-weight: bold;
-    color: #6a4c93;
-}
-.result-box {
-    padding: 15px;
+    color: white;
+}}
+
+/* Normal text (like Welcome sid) */
+.stMarkdown, .stText {{
+    color: white !important;
+}}
+
+/* Labels */
+label {{
+    color: white !important;
+    font-weight: 500;
+}}
+
+/* Input text */
+input, textarea {{
+    color: black !important;
+}}
+
+/* Table text */
+[data-testid="stDataFrame"] {{
+    background-color: white;
     border-radius: 10px;
-    margin-top: 20px;
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-}
-div.stButton > button {
+}}
+
+/* Buttons */
+div.stButton > button {{
     background-color: #6a4c93;
     color: white;
     border-radius: 10px;
     height: 3em;
     width: 100%;
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
-
 if st.session_state.page == "login":
 
-    st.markdown('<div class="title">👤 User Details</div>', unsafe_allow_html=True)
+    st.markdown('<div class="title"> User Details</div>', unsafe_allow_html=True)
 
     username = st.text_input("Enter Name")
     email = st.text_input("Enter Email")
@@ -63,16 +93,17 @@ if st.session_state.page == "login":
 
             st.session_state.page = "analysis"
             st.rerun()
+            
         else:
             st.warning("Please fill all details")
 
 
 elif st.session_state.page == "analysis":
 
-    st.markdown('<div class="title">🕵️ Fake Review Detector</div>', unsafe_allow_html=True)
-    st.write(f"Welcome, {st.session_state.username} 👋")
+    st.markdown('<div class="title"> Fake Review Detector</div>', unsafe_allow_html=True)
+    st.write(f"Welcome, {st.session_state.username} ")
 
-    review = st.text_area("✍️ Enter your review here:", height=150)
+    review = st.text_area("Enter your review here:", height=150)
 
     if st.button("Analyze Review"):
         if review.strip() == "":
@@ -85,13 +116,13 @@ elif st.session_state.page == "analysis":
             if prediction == 1:
                 result_text = "Fake Review"
                 st.markdown(
-                    f'<div class="result-box" style="background:#ffe6f0;color:#c2185b;">⚠️ Fake Review<br>Prob: {prob:.2f}</div>',
+                    f'<div class="result-box" style="background:#ffe6f0;color:#c2185b;text-align:center;">⚠️ Fake Review<br>Prob: {prob:.2f}</div>',
                     unsafe_allow_html=True
                 )
             else:
                 result_text = "Real Review"
                 st.markdown(
-                    f'<div class="result-box" style="background:#e6fff2;color:#2e7d32;">✅ Real Review<br>Prob: {prob:.2f}</div>',
+                    f'<div class="result-box" style="background:#e6fff2;color:#2e7d32;text-align:center;">✅ Real Review<br>Prob: {prob:.2f}</div>',
                     unsafe_allow_html=True
                 )
 
@@ -108,12 +139,12 @@ elif st.session_state.page == "analysis":
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("📜 View History"):
+        if st.button(" View History"):
             st.session_state.page = "history"
-            st.rerun()
+        
 
     with col2:
-        if st.button("🚪 Logout"):
+        if st.button("Logout"):
             st.session_state.clear()
             st.session_state.page = "login"
             st.rerun()
@@ -121,7 +152,7 @@ elif st.session_state.page == "analysis":
 
 elif st.session_state.page == "history":
 
-    st.markdown("## 📜 All Users Review History")
+    st.markdown("## All Users Review History")
 
     history = get_all_reviews()
 
@@ -140,3 +171,4 @@ elif st.session_state.page == "history":
     if st.button("⬅ Back"):
         st.session_state.page = "analysis"
         st.rerun()
+        
